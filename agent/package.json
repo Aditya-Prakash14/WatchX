@@ -1,0 +1,11 @@
+{
+  "name": "watchx-agent",
+  "version": "1.0.0",
+  "description": "WatchX system metrics collection agent",
+  "private": true,
+  "dependencies": {
+    "systeminformation": "^5.23.5",
+    "ws": "^8.18.0",
+    "uuid": "^11.0.3"
+  }
+}
