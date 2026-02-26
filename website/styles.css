@@ -1,0 +1,277 @@
+/* ═══════════════════════════════════════════════════════════════════
+   WatchX Showcase — Custom Styles
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Base ───────────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+::selection {
+  background-color: rgba(99, 102, 241, 0.3);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e1e2e;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a2a3e;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Navbar ──────────────────────────────────────────────────────── */
+#navbar.scrolled {
+  background: rgba(3, 3, 12, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── Feature Cards ──────────────────────────────────────────────── */
+.feature-card {
+  background: rgba(17, 17, 27, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1.25rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(99, 102, 241, 0.3),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover {
+  border-color: rgba(99, 102, 241, 0.15);
+  background: rgba(17, 17, 27, 0.8);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px -20px rgba(99, 102, 241, 0.15);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Showcase Tabs ──────────────────────────────────────────────── */
+.showcase-tab {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.showcase-tab:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.showcase-tab.active {
+  color: white;
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.showcase-panel {
+  display: none;
+  opacity: 0;
+  animation: fadeInPanel 0.4s ease forwards;
+}
+
+.showcase-panel.active {
+  display: block;
+  opacity: 1;
+}
+
+@keyframes fadeInPanel {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Code Blocks ────────────────────────────────────────────────── */
+.code-block {
+  background: #0d0d14;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.875rem;
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.code-content {
+  padding: 1rem 1.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: #e2e8f0;
+  overflow-x: auto;
+  margin: 0;
+}
+
+/* ── Log lines in showcase ──────────────────────────────────────── */
+.log-line {
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+/* ── Scroll reveal ──────────────────────────────────────────────── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Badge-like accents ─────────────────────────────────────────── */
+.badge-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: rgb(74, 222, 128);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-online::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(74, 222, 128);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ── Hero dashboard pulse border ────────────────────────────────── */
+#hero-dashboard {
+  position: relative;
+}
+
+#hero-dashboard::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.3),
+    rgba(139, 92, 246, 0.15),
+    rgba(6, 182, 212, 0.2)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ── Responsive tweaks ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .showcase-tab {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.6875rem;
+  }
+
+  .code-content {
+    font-size: 0.6875rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .log-line {
+    font-size: 9px;
+  }
+}
+
+/* ── Subtle gradient text shimmer on hover ──────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    #6366f1 0%,
+    #a5b4fc 25%,
+    #6366f1 50%,
+    #a5b4fc 75%,
+    #6366f1 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── Accessibility ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Focus visible ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

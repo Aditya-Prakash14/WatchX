@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WatchX — Real-Time Server Monitoring Platform</title>
+  <meta name="description" content="WatchX is an open-source real-time server monitoring platform that tracks system health metrics and sends proactive alerts to prevent downtime." />
+  <meta name="theme-color" content="#6366f1" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+            },
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'float-slow': 'float 8s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4,0,0.6,1) infinite',
+            'slide-up': 'slideUp 0.6s ease-out forwards',
+            'slide-up-delay': 'slideUp 0.6s ease-out 0.15s forwards',
+            'slide-up-delay-2': 'slideUp 0.6s ease-out 0.3s forwards',
+            'fade-in': 'fadeIn 1s ease-out forwards',
+            'glow': 'glow 2s ease-in-out infinite alternate',
+            'typing': 'typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite',
+            'chart-grow': 'chartGrow 2s ease-out forwards',
+            'count-up': 'countUp 2s ease-out forwards',
+            'scan-line': 'scanLine 3s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-20px)' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(30px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            glow: {
+              '0%': { boxShadow: '0 0 20px rgba(99,102,241,0.3)' },
+              '100%': { boxShadow: '0 0 40px rgba(99,102,241,0.6)' },
+            },
+            chartGrow: {
+              '0%': { transform: 'scaleY(0)', transformOrigin: 'bottom' },
+              '100%': { transform: 'scaleY(1)', transformOrigin: 'bottom' },
+            },
+            scanLine: {
+              '0%': { top: '0%' },
+              '100%': { top: '100%' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-gray-950 text-white antialiased overflow-x-hidden">
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <img src="Untitled_design-removebg-preview.png" alt="WatchX Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-brand-500/20 group-hover:shadow-brand-500/40 transition-shadow object-contain" />
+        <span class="text-xl font-bold tracking-tight">Watch<span class="text-brand-400">X</span></span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#features" class="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
+        <a href="#dashboard" class="text-sm text-gray-400 hover:text-white transition-colors">Dashboard</a>
+        <a href="#architecture" class="text-sm text-gray-400 hover:text-white transition-colors">Architecture</a>
+        <a href="#quickstart" class="text-sm text-gray-400 hover:text-white transition-colors">Quick Start</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="https://github.com" target="_blank" class="hidden sm:flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="#quickstart" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-xl transition-all hover:shadow-lg hover:shadow-brand-500/25">
+          Get Started
+        </a>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+    <!-- Background effects -->
+    <div class="absolute inset-0">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl animate-pulse-slow"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-500/5 rounded-full blur-3xl"></div>
+      <!-- Grid pattern -->
+      <div class="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-6 w-full">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <!-- Left — Text -->
+        <div class="space-y-8">
+          <div class="opacity-0 animate-slide-up">
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-sm font-medium">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Open Source · Real-Time · Self-Hosted
+            </span>
+          </div>
+
+          <h1 class="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight opacity-0 animate-slide-up-delay">
+            Monitor <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-violet-400 to-cyan-400">Everything</span>
+            <br />Prevent Downtime
+          </h1>
+
+          <p class="text-lg md:text-xl text-gray-400 max-w-xl leading-relaxed opacity-0 animate-slide-up-delay-2">
+            WatchX is a full-spectrum server monitoring platform that tracks CPU, memory, disk, network, processes, ports, Docker containers, and system logs — all in real time with proactive alerting.
+          </p>
+
+          <div class="flex flex-wrap gap-4 opacity-0 animate-slide-up-delay-2">
+            <a href="#quickstart" class="group inline-flex items-center gap-2 px-8 py-4 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-2xl transition-all hover:shadow-2xl hover:shadow-brand-500/25 hover:-translate-y-0.5">
+              Get Started Free
+              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+            <a href="#dashboard" class="inline-flex items-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-2xl transition-all hover:-translate-y-0.5">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              Live Demo
+            </a>
+          </div>
+
+          <!-- Tech stack -->
+          <div class="flex items-center gap-6 pt-4 opacity-0 animate-slide-up-delay-2">
+            <span class="text-xs text-gray-600 uppercase tracking-wider font-medium">Built with</span>
+            <div class="flex items-center gap-4">
+              <span class="px-3 py-1 rounded-lg bg-gray-900 text-gray-400 text-xs font-mono">Node.js</span>
+              <span class="px-3 py-1 rounded-lg bg-gray-900 text-gray-400 text-xs font-mono">React</span>
+              <span class="px-3 py-1 rounded-lg bg-gray-900 text-gray-400 text-xs font-mono">WebSocket</span>
+              <span class="px-3 py-1 rounded-lg bg-gray-900 text-gray-400 text-xs font-mono">SQLite</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right — Animated Dashboard Preview -->
+        <div class="relative animate-float hidden lg:block">
+          <div class="absolute inset-0 bg-gradient-to-r from-brand-500/20 to-violet-500/20 rounded-3xl blur-2xl -z-10 scale-95"></div>
+          <div id="hero-dashboard" class="relative bg-gray-900/90 backdrop-blur-xl border border-gray-800/50 rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Dashboard mock titlebar -->
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-800/50 bg-gray-900/50">
+              <div class="flex gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+              </div>
+              <div class="flex-1 text-center">
+                <span class="text-xs text-gray-500 font-mono">watchx://dashboard</span>
+              </div>
+            </div>
+
+            <!-- Dashboard content -->
+            <div class="p-5 space-y-4">
+              <!-- Status cards row -->
+              <div class="grid grid-cols-4 gap-3">
+                <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30">
+                  <div class="text-[10px] text-gray-500 mb-1">Servers</div>
+                  <div class="text-xl font-bold text-white counter" data-target="12">0</div>
+                  <div class="text-[10px] text-emerald-400">All Online</div>
+                </div>
+                <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30">
+                  <div class="text-[10px] text-gray-500 mb-1">CPU Avg</div>
+                  <div class="text-xl font-bold text-brand-400 counter" data-target="34">0</div>
+                  <div class="text-[10px] text-gray-500">percent</div>
+                </div>
+                <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30">
+                  <div class="text-[10px] text-gray-500 mb-1">Memory</div>
+                  <div class="text-xl font-bold text-violet-400 counter" data-target="61">0</div>
+                  <div class="text-[10px] text-gray-500">percent</div>
+                </div>
+                <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30">
+                  <div class="text-[10px] text-gray-500 mb-1">Alerts</div>
+                  <div class="text-xl font-bold text-amber-400">2</div>
+                  <div class="text-[10px] text-amber-400">warnings</div>
+                </div>
+              </div>
+
+              <!-- Chart mock -->
+              <div class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/20">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs text-gray-400 font-medium">CPU Usage — production-web-01</span>
+                  <span class="text-xs text-emerald-400">● Live</span>
+                </div>
+                <svg id="hero-chart" class="w-full h-32" viewBox="0 0 500 120" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="rgb(99,102,241)" stop-opacity="0.4" />
+                      <stop offset="100%" stop-color="rgb(99,102,241)" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path id="chart-area" fill="url(#chartGrad)" d="" />
+                  <path id="chart-line" fill="none" stroke="rgb(99,102,241)" stroke-width="2" d="" />
+                  <circle id="chart-dot" cx="0" cy="0" r="4" fill="rgb(99,102,241)" class="animate-pulse" />
+                </svg>
+              </div>
+
+              <!-- Server rows mock -->
+              <div class="space-y-2">
+                <div class="flex items-center gap-3 bg-gray-800/40 rounded-lg p-3 border border-gray-700/20">
+                  <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <span class="text-xs text-white font-medium flex-1">prod-web-01</span>
+                  <div class="flex gap-4 text-[10px] text-gray-400">
+                    <span>CPU <span class="text-brand-400 font-mono">32%</span></span>
+                    <span>RAM <span class="text-violet-400 font-mono">58%</span></span>
+                    <span>Disk <span class="text-cyan-400 font-mono">23%</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 bg-gray-800/40 rounded-lg p-3 border border-gray-700/20">
+                  <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <span class="text-xs text-white font-medium flex-1">prod-api-02</span>
+                  <div class="flex gap-4 text-[10px] text-gray-400">
+                    <span>CPU <span class="text-brand-400 font-mono">47%</span></span>
+                    <span>RAM <span class="text-violet-400 font-mono">71%</span></span>
+                    <span>Disk <span class="text-cyan-400 font-mono">45%</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 bg-gray-800/40 rounded-lg p-3 border border-gray-700/20">
+                  <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+                  <span class="text-xs text-white font-medium flex-1">db-primary-01</span>
+                  <div class="flex gap-4 text-[10px] text-gray-400">
+                    <span>CPU <span class="text-amber-400 font-mono">82%</span></span>
+                    <span>RAM <span class="text-violet-400 font-mono">89%</span></span>
+                    <span>Disk <span class="text-cyan-400 font-mono">67%</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scan line overlay effect -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+              <div class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/30 to-transparent animate-scan-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in" style="animation-delay: 1.5s;">
+      <span class="text-xs text-gray-600">Scroll to explore</span>
+      <div class="w-5 h-8 rounded-full border border-gray-700 flex items-start justify-center p-1.5">
+        <div class="w-1 h-2 rounded-full bg-brand-500 animate-bounce"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       FEATURES SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="features" class="py-24 md:py-32 relative">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.05),transparent_70%)]"></div>
+
+    <div class="max-w-7xl mx-auto px-6 relative">
+      <div class="text-center mb-20 reveal-on-scroll">
+        <span class="text-brand-400 text-sm font-semibold tracking-wider uppercase">Features</span>
+        <h2 class="text-4xl md:text-5xl font-black mt-3 mb-6">
+          Full-Spectrum <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-violet-400">Monitoring</span>
+        </h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          From CPU usage to Docker containers, from network ports to system logs — WatchX monitors every aspect of your infrastructure in real time.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Real-Time Metrics</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              CPU (total & per-core), memory, disk, network throughput, load average, temperature, and battery — streamed every 5 seconds via WebSocket.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Process Explorer</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Sortable table of top 50 processes with CPU/memory usage, RSS, state, PID, and user information. Search and sort by any column.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Ports & Networks</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              See every listening port, active connection, and connection state (ESTABLISHED, TIME_WAIT, CLOSE_WAIT). Full network interface details.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Proactive Alerts</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Configurable alert rules with thresholds, sustained duration, and cooldowns. Notifications via email, webhook, and in-app with auto-resolve.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Live Log Viewer</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Real-time system log streaming with level filtering (error/warn/info/debug), full-text search, pause/resume, and color-coded entries.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Docker Monitoring</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Container-level visibility with CPU, RAM, network stats per container. See running/stopped status, images, ports, and resource consumption.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 7 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.064.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">System & Filesystem</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Filesystem mounts with usage bars, network interfaces with IP/MAC/speed, logged-in users, services status — the complete system picture.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 8 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Interactive Charts</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Beautiful time-series charts with gradient fills and configurable time ranges (15m to 24h). Historical data stored in SQLite with configurable retention.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 9 -->
+        <div class="feature-card group reveal-on-scroll">
+          <div class="p-8">
+            <div class="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg class="w-7 h-7 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Zero Configuration</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Just install, run, and monitor. Default alert rules are seeded automatically. SQLite database requires no setup. One <code class="text-brand-400">npm run dev</code> to start.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       DASHBOARD SHOWCASE
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="dashboard" class="py-24 md:py-32 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900/50 to-gray-950"></div>
+
+    <div class="max-w-7xl mx-auto px-6 relative">
+      <div class="text-center mb-16 reveal-on-scroll">
+        <span class="text-brand-400 text-sm font-semibold tracking-wider uppercase">Dashboard</span>
+        <h2 class="text-4xl md:text-5xl font-black mt-3 mb-6">
+          Beautiful. <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-cyan-400">Powerful.</span> Real-Time.
+        </h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          A dark-themed dashboard designed for 24/7 NOC operations. Every panel updates in real time via WebSocket — no polling, no delays.
+        </p>
+      </div>
+
+      <!-- Tabbed dashboard showcase -->
+      <div class="reveal-on-scroll">
+        <div class="flex justify-center gap-2 mb-8">
+          <button class="showcase-tab active" data-tab="overview">Overview</button>
+          <button class="showcase-tab" data-tab="processes">Processes</button>
+          <button class="showcase-tab" data-tab="network">Network</button>
+          <button class="showcase-tab" data-tab="logs">Logs</button>
+          <button class="showcase-tab" data-tab="docker">Docker</button>
+        </div>
+
+        <!-- Dashboard frame -->
+        <div class="relative mx-auto max-w-5xl">
+          <div class="absolute inset-0 bg-gradient-to-r from-brand-500/20 via-violet-500/20 to-cyan-500/20 rounded-3xl blur-3xl -z-10 scale-95 animate-glow"></div>
+          <div class="bg-gray-900 border border-gray-800/60 rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Titlebar -->
+            <div class="px-5 py-3 border-b border-gray-800/50 flex items-center gap-3 bg-gray-900/80">
+              <div class="flex gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+              </div>
+              <div class="flex-1">
+                <div class="mx-auto w-80 bg-gray-800 rounded-lg px-4 py-1.5 text-xs text-gray-500 font-mono text-center">
+                  localhost:5173 — WatchX Dashboard
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                <span class="text-xs text-emerald-400">Connected</span>
+              </div>
+            </div>
+
+            <!-- Showcase panels -->
+            <div class="p-6 min-h-[420px]">
+              <!-- Overview tab -->
+              <div class="showcase-panel active" data-panel="overview">
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                  <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/30">
+                    <div class="text-xs text-gray-500 mb-2">Total Servers</div>
+                    <div class="text-3xl font-black text-white">12</div>
+                    <div class="flex items-center gap-1 mt-1"><div class="w-2 h-2 rounded-full bg-emerald-400"></div><span class="text-xs text-emerald-400">All healthy</span></div>
+                  </div>
+                  <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/30">
+                    <div class="text-xs text-gray-500 mb-2">Avg CPU</div>
+                    <div class="text-3xl font-black text-brand-400">34<span class="text-lg">%</span></div>
+                    <div class="w-full h-1.5 bg-gray-700 rounded-full mt-2"><div class="w-[34%] h-full bg-brand-500 rounded-full"></div></div>
+                  </div>
+                  <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/30">
+                    <div class="text-xs text-gray-500 mb-2">Avg Memory</div>
+                    <div class="text-3xl font-black text-violet-400">61<span class="text-lg">%</span></div>
+                    <div class="w-full h-1.5 bg-gray-700 rounded-full mt-2"><div class="w-[61%] h-full bg-violet-500 rounded-full"></div></div>
+                  </div>
+                  <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/30">
+                    <div class="text-xs text-gray-500 mb-2">Active Alerts</div>
+                    <div class="text-3xl font-black text-amber-400">2</div>
+                    <div class="text-xs text-amber-400 mt-1">1 critical · 1 warning</div>
+                  </div>
+                </div>
+                <!-- Mini chart placeholders -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/20">
+                    <div class="text-xs text-gray-400 mb-3">CPU Usage — Last Hour</div>
+                    <svg class="w-full h-24" viewBox="0 0 400 80">
+                      <defs><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0,60 Q20,55 40,50 T80,45 T120,40 T160,35 T200,38 T240,30 T280,35 T320,25 T360,28 T400,20" fill="none" stroke="#6366f1" stroke-width="2"/>
+                      <path d="M0,60 Q20,55 40,50 T80,45 T120,40 T160,35 T200,38 T240,30 T280,35 T320,25 T360,28 T400,20 V80 H0Z" fill="url(#sg1)"/>
+                    </svg>
+                  </div>
+                  <div class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/20">
+                    <div class="text-xs text-gray-400 mb-3">Memory Usage — Last Hour</div>
+                    <svg class="w-full h-24" viewBox="0 0 400 80">
+                      <defs><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/><stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0,30 Q20,32 40,28 T80,35 T120,30 T160,32 T200,28 T240,30 T280,27 T320,32 T360,28 T400,30" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+                      <path d="M0,30 Q20,32 40,28 T80,35 T120,30 T160,32 T200,28 T240,30 T280,27 T320,32 T360,28 T400,30 V80 H0Z" fill="url(#sg2)"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Processes tab -->
+              <div class="showcase-panel" data-panel="processes">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-3">
+                    <h3 class="text-sm font-semibold text-white">Top Processes</h3>
+                    <span class="text-xs text-gray-500">542 total · 3 running · 539 sleeping</span>
+                  </div>
+                  <div class="bg-gray-800 rounded-lg px-3 py-1.5 text-xs text-gray-500 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    Search processes...
+                  </div>
+                </div>
+                <table class="w-full text-xs">
+                  <thead><tr class="text-gray-500 border-b border-gray-800"><th class="text-left py-2 font-medium">PID</th><th class="text-left py-2 font-medium">Name</th><th class="text-left py-2 font-medium">User</th><th class="text-right py-2 font-medium">CPU %</th><th class="text-right py-2 font-medium">MEM %</th><th class="text-right py-2 font-medium">RSS</th><th class="text-left py-2 font-medium pl-3">State</th></tr></thead>
+                  <tbody class="text-gray-300">
+                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/30"><td class="py-2 text-gray-500 font-mono">1842</td><td class="py-2 font-medium text-white">node</td><td class="py-2 text-gray-500">www-data</td><td class="py-2 text-right"><span class="text-brand-400 font-mono">24.3</span></td><td class="py-2 text-right"><span class="text-violet-400 font-mono">8.2</span></td><td class="py-2 text-right text-gray-400 font-mono">656 MB</td><td class="py-2 pl-3"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px]">running</span></td></tr>
+                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/30"><td class="py-2 text-gray-500 font-mono">892</td><td class="py-2 font-medium text-white">postgres</td><td class="py-2 text-gray-500">postgres</td><td class="py-2 text-right"><span class="text-brand-400 font-mono">15.7</span></td><td class="py-2 text-right"><span class="text-violet-400 font-mono">12.1</span></td><td class="py-2 text-right text-gray-400 font-mono">968 MB</td><td class="py-2 pl-3"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px]">running</span></td></tr>
+                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/30"><td class="py-2 text-gray-500 font-mono">1204</td><td class="py-2 font-medium text-white">nginx</td><td class="py-2 text-gray-500">root</td><td class="py-2 text-right"><span class="text-brand-400 font-mono">3.1</span></td><td class="py-2 text-right"><span class="text-violet-400 font-mono">2.4</span></td><td class="py-2 text-right text-gray-400 font-mono">192 MB</td><td class="py-2 pl-3"><span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px]">sleeping</span></td></tr>
+                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/30"><td class="py-2 text-gray-500 font-mono">2501</td><td class="py-2 font-medium text-white">redis-server</td><td class="py-2 text-gray-500">redis</td><td class="py-2 text-right"><span class="text-brand-400 font-mono">1.8</span></td><td class="py-2 text-right"><span class="text-violet-400 font-mono">4.5</span></td><td class="py-2 text-right text-gray-400 font-mono">360 MB</td><td class="py-2 pl-3"><span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px]">sleeping</span></td></tr>
+                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/30"><td class="py-2 text-gray-500 font-mono">3102</td><td class="py-2 font-medium text-white">dockerd</td><td class="py-2 text-gray-500">root</td><td class="py-2 text-right"><span class="text-brand-400 font-mono">1.2</span></td><td class="py-2 text-right"><span class="text-violet-400 font-mono">3.8</span></td><td class="py-2 text-right text-gray-400 font-mono">304 MB</td><td class="py-2 pl-3"><span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px]">sleeping</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Network tab -->
+              <div class="showcase-panel" data-panel="network">
+                <div class="grid grid-cols-5 gap-3 mb-6">
+                  <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30 text-center">
+                    <div class="text-2xl font-bold text-white">847</div>
+                    <div class="text-[10px] text-gray-500 mt-1">ESTABLISHED</div>
+                  </div>
+                  <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30 text-center">
+                    <div class="text-2xl font-bold text-brand-400">23</div>
+                    <div class="text-[10px] text-gray-500 mt-1">LISTENING</div>
+                  </div>
+                  <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30 text-center">
+                    <div class="text-2xl font-bold text-amber-400">145</div>
+                    <div class="text-[10px] text-gray-500 mt-1">TIME_WAIT</div>
+                  </div>
+                  <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30 text-center">
+                    <div class="text-2xl font-bold text-red-400">3</div>
+                    <div class="text-[10px] text-gray-500 mt-1">CLOSE_WAIT</div>
+                  </div>
+                  <div class="bg-gray-800/60 rounded-xl p-3 border border-gray-700/30 text-center">
+                    <div class="text-2xl font-bold text-cyan-400">1018</div>
+                    <div class="text-[10px] text-gray-500 mt-1">TOTAL</div>
+                  </div>
+                </div>
+                <div class="mb-3 text-sm font-semibold text-white">Listening Ports</div>
+                <table class="w-full text-xs mb-6">
+                  <thead><tr class="text-gray-500 border-b border-gray-800"><th class="text-left py-2 font-medium">Port</th><th class="text-left py-2 font-medium">Protocol</th><th class="text-left py-2 font-medium">Process</th><th class="text-left py-2 font-medium">PID</th><th class="text-left py-2 font-medium">Address</th></tr></thead>
+                  <tbody class="text-gray-300">
+                    <tr class="border-b border-gray-800/50"><td class="py-2 font-mono text-brand-400">80</td><td class="py-2">tcp</td><td class="py-2 text-white">nginx</td><td class="py-2 text-gray-500">1204</td><td class="py-2 text-gray-500">0.0.0.0</td></tr>
+                    <tr class="border-b border-gray-800/50"><td class="py-2 font-mono text-brand-400">443</td><td class="py-2">tcp</td><td class="py-2 text-white">nginx</td><td class="py-2 text-gray-500">1204</td><td class="py-2 text-gray-500">0.0.0.0</td></tr>
+                    <tr class="border-b border-gray-800/50"><td class="py-2 font-mono text-brand-400">3001</td><td class="py-2">tcp</td><td class="py-2 text-white">node</td><td class="py-2 text-gray-500">1842</td><td class="py-2 text-gray-500">0.0.0.0</td></tr>
+                    <tr class="border-b border-gray-800/50"><td class="py-2 font-mono text-brand-400">5432</td><td class="py-2">tcp</td><td class="py-2 text-white">postgres</td><td class="py-2 text-gray-500">892</td><td class="py-2 text-gray-500">127.0.0.1</td></tr>
+                    <tr class="border-b border-gray-800/50"><td class="py-2 font-mono text-brand-400">6379</td><td class="py-2">tcp</td><td class="py-2 text-white">redis-server</td><td class="py-2 text-gray-500">2501</td><td class="py-2 text-gray-500">127.0.0.1</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Logs tab -->
+              <div class="showcase-panel" data-panel="logs">
+                <div class="flex items-center gap-4 mb-4">
+                  <div class="flex gap-2">
+                    <span class="px-2.5 py-1 rounded-md bg-red-500/10 text-red-400 text-[10px] font-medium">12 errors</span>
+                    <span class="px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-medium">45 warnings</span>
+                    <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 text-[10px] font-medium">1,892 info</span>
+                    <span class="px-2.5 py-1 rounded-md bg-gray-500/10 text-gray-400 text-[10px] font-medium">234 debug</span>
+                  </div>
+                  <div class="flex-1"></div>
+                  <span class="flex items-center gap-1 text-xs text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live</span>
+                </div>
+                <div class="bg-gray-950 rounded-xl p-4 font-mono text-[11px] space-y-1.5 h-72 overflow-hidden relative">
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:01</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">Request processed: GET /api/health — 200 OK (2ms)</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:02</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">WebSocket client connected: dashboard-1a2b3c</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:05</span> <span class="text-amber-400">[WARN]</span> <span class="text-gray-300">High memory usage on db-primary-01: 89% (threshold: 80%)</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:05</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">Alert triggered: MEM_HIGH_WARN for db-primary-01</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:10</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">Metric received from prod-web-01: cpu=32.1% mem=58.4%</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:10</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">Metric received from prod-api-02: cpu=47.2% mem=71.0%</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:11</span> <span class="text-red-400">[ERROR]</span> <span class="text-gray-300">Connection refused: smtp.example.com:587 — alert email failed</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:15</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">Detail snapshot received: prod-web-01 (50 procs, 23 ports)</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:15</span> <span class="text-gray-500">[DEBUG]</span> <span class="text-gray-500">Cache invalidation: metrics_prod-web-01_1h</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:20</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">Request processed: GET /api/dashboard — 200 OK (8ms)</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:25</span> <span class="text-amber-400">[WARN]</span> <span class="text-gray-300">CPU spike on prod-api-02: 82% → 47% (recovered)</span></div>
+                  <div class="log-line"><span class="text-gray-600">Feb 26 14:23:30</span> <span class="text-blue-400">[INFO]</span> <span class="text-gray-300">Alert resolved: CPU_HIGH_WARN for prod-api-02</span></div>
+                  <div class="log-line text-gray-600 animate-pulse">▌</div>
+                </div>
+              </div>
+
+              <!-- Docker tab -->
+              <div class="showcase-panel" data-panel="docker">
+                <div class="flex items-center gap-3 mb-5">
+                  <h3 class="text-sm font-semibold text-white">Docker Containers</h3>
+                  <span class="text-xs text-gray-500">5 running · 1 stopped</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                  <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/30">
+                    <div class="flex items-center gap-2 mb-3">
+                      <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                      <span class="text-sm font-semibold text-white">api-gateway</span>
+                    </div>
+                    <div class="text-[10px] text-gray-500 mb-3 font-mono">nginx:1.25-alpine</div>
+                    <div class="space-y-2">
+                      <div class="flex justify-between text-[10px]"><span class="text-gray-500">CPU</span><span class="text-brand-400 font-mono">2.3%</span></div>
+                      <div class="w-full h-1 bg-gray-700 rounded-full"><div class="w-[2.3%] h-full bg-brand-500 rounded-full" style="min-width:3px"></div></div>
+                      <div class="flex justify-between text-[10px]"><span class="text-gray-500">RAM</span><span class="text-violet-400 font-mono">128 MB / 512 MB</span></div>
+                      <div class="w-full h-1 bg-gray-700 rounded-full"><div class="w-[25%] h-full bg-violet-500 rounded-full"></div></div>
+                    </div>
+                  </div>
+                  <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/30">
+                    <div class="flex items-center gap-2 mb-3">
+                      <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                      <span class="text-sm font-semibold text-white">app-server</span>
+                    </div>
+                    <div class="text-[10px] text-gray-500 mb-3 font-mono">node:20-slim</div>
+                    <div class="space-y-2">
+                      <div class="flex justify-between text-[10px]"><span class="text-gray-500">CPU</span><span class="text-brand-400 font-mono">18.7%</span></div>
+                      <div class="w-full h-1 bg-gray-700 rounded-full"><div class="w-[18.7%] h-full bg-brand-500 rounded-full"></div></div>
+                      <div class="flex justify-between text-[10px]"><span class="text-gray-500">RAM</span><span class="text-violet-400 font-mono">480 MB / 1 GB</span></div>
+                      <div class="w-full h-1 bg-gray-700 rounded-full"><div class="w-[47%] h-full bg-violet-500 rounded-full"></div></div>
+                    </div>
+                  </div>
+                  <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/30">
+                    <div class="flex items-center gap-2 mb-3">
+                      <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                      <span class="text-sm font-semibold text-white">postgres-db</span>
+                    </div>
+                    <div class="text-[10px] text-gray-500 mb-3 font-mono">postgres:16-alpine</div>
+                    <div class="space-y-2">
+                      <div class="flex justify-between text-[10px]"><span class="text-gray-500">CPU</span><span class="text-brand-400 font-mono">8.4%</span></div>
+                      <div class="w-full h-1 bg-gray-700 rounded-full"><div class="w-[8.4%] h-full bg-brand-500 rounded-full"></div></div>
+                      <div class="flex justify-between text-[10px]"><span class="text-gray-500">RAM</span><span class="text-violet-400 font-mono">768 MB / 2 GB</span></div>
+                      <div class="w-full h-1 bg-gray-700 rounded-full"><div class="w-[37.5%] h-full bg-violet-500 rounded-full"></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ARCHITECTURE SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="architecture" class="py-24 md:py-32 relative">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 reveal-on-scroll">
+        <span class="text-brand-400 text-sm font-semibold tracking-wider uppercase">Architecture</span>
+        <h2 class="text-4xl md:text-5xl font-black mt-3 mb-6">
+          How It <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-brand-400">Works</span>
+        </h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          A lightweight agent on each server streams metrics over WebSocket to a central hub. The dashboard connects in real time — zero polling.
+        </p>
+      </div>
+
+      <!-- Architecture diagram -->
+      <div class="reveal-on-scroll max-w-4xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          <!-- Agent -->
+          <div class="text-center">
+            <div class="inline-flex w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20 items-center justify-center mb-4">
+              <svg class="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.064.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">Agent</h3>
+            <p class="text-sm text-gray-500 mb-4">Runs on each server</p>
+            <div class="bg-gray-900 rounded-xl p-4 text-left space-y-1.5 border border-gray-800/50">
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span class="text-gray-400">CPU/Memory/Disk metrics</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span class="text-gray-400">Process list (top 50)</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span class="text-gray-400">Ports & connections</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span class="text-gray-400">Docker containers</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span class="text-gray-400">System log tail</span></div>
+            </div>
+          </div>
+
+          <!-- Arrow + Server -->
+          <div class="text-center">
+            <!-- Connection arrows -->
+            <div class="hidden md:flex items-center justify-center h-20 mb-4 relative">
+              <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-brand-500/50 relative">
+                    <div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 border-t border-r border-brand-500/50 transform rotate-45"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="inline-flex w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-500/20 to-brand-500/5 border border-brand-500/20 items-center justify-center mb-4">
+              <svg class="w-10 h-10 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m19.5 0a3 3 0 01-3 3H5.25a3 3 0 01-3-3m19.5 0a3 3 0 00-3-3H5.25a3 3 0 00-3 3m16.5 0h.008v.008h-.008v-.008zm-3 0h.008v.008h-.008v-.008z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">WatchX Server</h3>
+            <p class="text-sm text-gray-500 mb-4">Central monitoring hub</p>
+            <div class="bg-gray-900 rounded-xl p-4 text-left space-y-1.5 border border-gray-800/50">
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-brand-400"></div><span class="text-gray-400">WebSocket hub</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-brand-400"></div><span class="text-gray-400">REST API</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-brand-400"></div><span class="text-gray-400">SQLite persistence</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-brand-400"></div><span class="text-gray-400">Alert engine</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-brand-400"></div><span class="text-gray-400">Email/Webhook alerts</span></div>
+            </div>
+          </div>
+
+          <!-- Dashboard -->
+          <div class="text-center">
+            <div class="hidden md:flex items-center justify-center h-20 mb-4 relative">
+              <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2">
+                <div class="flex items-center">
+                  <div class="flex-1 h-px bg-gradient-to-r from-brand-500/50 to-violet-500/50 relative">
+                    <div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 border-t border-r border-violet-500/50 transform rotate-45"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="inline-flex w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/20 items-center justify-center mb-4">
+              <svg class="w-10 h-10 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">Dashboard</h3>
+            <p class="text-sm text-gray-500 mb-4">React + Tailwind + Recharts</p>
+            <div class="bg-gray-900 rounded-xl p-4 text-left space-y-1.5 border border-gray-800/50">
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-violet-400"></div><span class="text-gray-400">Real-time WebSocket</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-violet-400"></div><span class="text-gray-400">Interactive charts</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-violet-400"></div><span class="text-gray-400">Process explorer</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-violet-400"></div><span class="text-gray-400">Log viewer</span></div>
+              <div class="flex items-center gap-2 text-xs"><div class="w-1.5 h-1.5 rounded-full bg-violet-400"></div><span class="text-gray-400">Alert management</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Protocol label -->
+        <div class="flex justify-center mt-8">
+          <div class="inline-flex items-center gap-3 px-6 py-3 bg-gray-900 border border-gray-800/50 rounded-full">
+            <span class="text-xs text-gray-500">Protocol:</span>
+            <span class="px-2.5 py-1 bg-brand-500/10 text-brand-400 text-xs font-mono rounded-md">WebSocket (ws://)</span>
+            <span class="text-gray-700">+</span>
+            <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-mono rounded-md">REST API</span>
+            <span class="text-gray-700">+</span>
+            <span class="px-2.5 py-1 bg-violet-500/10 text-violet-400 text-xs font-mono rounded-md">SQLite</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       QUICK START SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="quickstart" class="py-24 md:py-32 relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900/30 to-gray-950"></div>
+
+    <div class="max-w-7xl mx-auto px-6 relative">
+      <div class="text-center mb-16 reveal-on-scroll">
+        <span class="text-brand-400 text-sm font-semibold tracking-wider uppercase">Quick Start</span>
+        <h2 class="text-4xl md:text-5xl font-black mt-3 mb-6">
+          Up and Running in <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-brand-400">60 Seconds</span>
+        </h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          Clone, install, run. No configuration needed — sensible defaults and auto-seeded alert rules get you monitoring instantly.
+        </p>
+      </div>
+
+      <div class="max-w-3xl mx-auto space-y-6 reveal-on-scroll">
+        <!-- Step 1 -->
+        <div class="flex gap-6 items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+            <span class="text-brand-400 font-bold text-sm">1</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-white font-semibold mb-3">Clone & Install</h3>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="text-gray-500 text-xs">Terminal</span>
+                <button onclick="copyCode(this)" class="text-gray-500 hover:text-white text-xs transition-colors">Copy</button>
+              </div>
+              <pre class="code-content"><code><span class="text-emerald-400">$</span> git clone https://github.com/your-org/watchx.git
+<span class="text-emerald-400">$</span> cd watchx
+<span class="text-emerald-400">$</span> npm install
+<span class="text-emerald-400">$</span> cd agent && npm install && cd ..
+<span class="text-emerald-400">$</span> cd frontend && npm install && cd ..</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-6 items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+            <span class="text-brand-400 font-bold text-sm">2</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-white font-semibold mb-3">Configure (Optional)</h3>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="text-gray-500 text-xs">.env</span>
+                <button onclick="copyCode(this)" class="text-gray-500 hover:text-white text-xs transition-colors">Copy</button>
+              </div>
+              <pre class="code-content"><code><span class="text-gray-500"># Server</span>
+<span class="text-violet-400">PORT</span>=<span class="text-amber-400">3001</span>
+<span class="text-violet-400">HOST</span>=<span class="text-amber-400">0.0.0.0</span>
+
+<span class="text-gray-500"># Alerting (optional)</span>
+<span class="text-violet-400">SMTP_HOST</span>=<span class="text-amber-400">smtp.gmail.com</span>
+<span class="text-violet-400">SMTP_PORT</span>=<span class="text-amber-400">587</span>
+<span class="text-violet-400">SMTP_USER</span>=<span class="text-amber-400">alerts@yourcompany.com</span>
+<span class="text-violet-400">ALERT_WEBHOOK_URL</span>=<span class="text-amber-400">https://hooks.slack.com/...</span></code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-6 items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <span class="text-emerald-400 font-bold text-sm">3</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-white font-semibold mb-3">Launch Everything</h3>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="text-gray-500 text-xs">Terminal</span>
+                <button onclick="copyCode(this)" class="text-gray-500 hover:text-white text-xs transition-colors">Copy</button>
+              </div>
+              <pre class="code-content"><code><span class="text-emerald-400">$</span> npm run dev
+
+<span class="text-gray-500"># Starts concurrently:</span>
+<span class="text-gray-500">#   → Server on :3001 (API + WebSocket hub)</span>
+<span class="text-gray-500">#   → Agent (collects local metrics)</span>
+<span class="text-gray-500">#   → Frontend on :5173 (Vite dev server)</span>
+<span class="text-gray-500">#</span>
+<span class="text-gray-500"># Open http://localhost:5173 and start monitoring!</span></code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remote agent step -->
+        <div class="flex gap-6 items-start mt-8 pt-8 border-t border-gray-800/50">
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-white font-semibold mb-3">Monitor Remote Servers</h3>
+            <p class="text-sm text-gray-400 mb-3">Deploy the agent on any server — just set the WatchX server URL:</p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="text-gray-500 text-xs">Remote Server</span>
+                <button onclick="copyCode(this)" class="text-gray-500 hover:text-white text-xs transition-colors">Copy</button>
+              </div>
+              <pre class="code-content"><code><span class="text-emerald-400">$</span> <span class="text-violet-400">WATCHX_SERVER</span>=ws://your-watchx-server:3001 node agent/</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       CTA SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section class="py-24 md:py-32 relative overflow-hidden">
+    <div class="absolute inset-0">
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-600/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-6 text-center relative reveal-on-scroll">
+      <h2 class="text-4xl md:text-5xl font-black mb-6">
+        Stop Guessing.<br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-violet-400 to-cyan-400">Start Monitoring.</span>
+      </h2>
+      <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
+        WatchX is free, open source, and self-hosted. Deploy in seconds, monitor everything, and get alerts before your users notice a problem.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="#quickstart" class="group inline-flex items-center gap-3 px-10 py-5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-lg rounded-2xl transition-all hover:shadow-2xl hover:shadow-brand-500/25 hover:-translate-y-1">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Deploy WatchX Now
+        </a>
+        <a href="https://github.com" target="_blank" class="inline-flex items-center gap-3 px-10 py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-lg rounded-2xl transition-all hover:-translate-y-1">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          Star on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════════ -->
+  <footer class="border-t border-gray-800/50 py-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-12 mb-12">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-3 mb-4">
+            <img src="Untitled_design-removebg-preview.png" alt="WatchX Logo" class="w-9 h-9 rounded-xl shadow-lg shadow-brand-500/20 object-contain" />
+            <span class="text-lg font-bold">Watch<span class="text-brand-400">X</span></span>
+          </div>
+          <p class="text-sm text-gray-500 max-w-sm leading-relaxed">
+            Open-source, self-hosted server monitoring. Track every metric, every process, every log line — in real time.
+          </p>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <h4 class="text-sm font-semibold text-white mb-4">Product</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#features" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">Features</a></li>
+            <li><a href="#dashboard" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">Dashboard</a></li>
+            <li><a href="#architecture" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">Architecture</a></li>
+            <li><a href="#quickstart" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">Quick Start</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-sm font-semibold text-white mb-4">Resources</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">Documentation</a></li>
+            <li><a href="#" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">GitHub</a></li>
+            <li><a href="#" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">Changelog</a></li>
+            <li><a href="#" class="text-sm text-gray-500 hover:text-brand-400 transition-colors">License (MIT)</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-800/50 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-gray-600">&copy; 2026 WatchX. Open source under the MIT License.</p>
+        <div class="flex items-center gap-6">
+          <a href="#" class="text-gray-600 hover:text-brand-400 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+          <a href="#" class="text-gray-600 hover:text-brand-400 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>
