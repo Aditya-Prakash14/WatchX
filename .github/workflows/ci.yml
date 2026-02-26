@@ -1,0 +1,212 @@
+name: WatchX CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ── Lint & Validate ─────────────────────────────────────────────────
+  lint:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install agent dependencies
+        run: cd agent && npm ci
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Check for syntax errors (server)
+        run: node --check server/index.js server/db.js server/routes.js server/alertEngine.js
+
+      - name: Check for syntax errors (agent)
+        run: node --check agent/index.js
+
+  # ── Build Frontend ──────────────────────────────────────────────────
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # ── Server Integration Test ─────────────────────────────────────────
+  test-server:
+    name: Server Integration Test
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Start server
+        run: node server/index.js &
+        env:
+          PORT: 3001
+          DB_PATH: ./data/test.db
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 15); do
+            if curl -s http://localhost:3001/api/dashboard > /dev/null 2>&1; then
+              echo "Server is ready"
+              exit 0
+            fi
+            echo "Waiting for server... ($i/15)"
+            sleep 1
+          done
+          echo "Server failed to start"
+          exit 1
+
+      - name: Test GET /api/dashboard
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/dashboard)
+          if [ "$response" != "200" ]; then echo "FAIL: /api/dashboard returned $response"; exit 1; fi
+          echo "PASS: /api/dashboard → 200"
+
+      - name: Test GET /api/servers
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/servers)
+          if [ "$response" != "200" ]; then echo "FAIL: /api/servers returned $response"; exit 1; fi
+          echo "PASS: /api/servers → 200"
+
+      - name: Test GET /api/rules (seeded defaults)
+        run: |
+          body=$(curl -s http://localhost:3001/api/rules)
+          count=$(echo "$body" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")
+          if [ "$count" -lt 6 ]; then echo "FAIL: Expected ≥6 default rules, got $count"; exit 1; fi
+          echo "PASS: /api/rules → $count default rules"
+
+      - name: Test POST /api/rules (create rule)
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3001/api/rules \
+            -H "Content-Type: application/json" \
+            -d '{"metric":"cpu_pct","operator":"gt","threshold":95,"severity":"critical"}')
+          if [ "$response" != "201" ]; then echo "FAIL: POST /api/rules returned $response"; exit 1; fi
+          echo "PASS: POST /api/rules → 201"
+
+      - name: Test GET /api/alerts
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/alerts)
+          if [ "$response" != "200" ]; then echo "FAIL: /api/alerts returned $response"; exit 1; fi
+          echo "PASS: /api/alerts → 200"
+
+      - name: Test GET /api/alerts/active
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/alerts/active)
+          if [ "$response" != "200" ]; then echo "FAIL: /api/alerts/active returned $response"; exit 1; fi
+          echo "PASS: /api/alerts/active → 200"
+
+      - name: Test 404 for unknown server
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/servers/nonexistent)
+          if [ "$response" != "404" ]; then echo "FAIL: Expected 404, got $response"; exit 1; fi
+          echo "PASS: /api/servers/nonexistent → 404"
+
+  # ── Agent Startup Test ──────────────────────────────────────────────
+  test-agent:
+    name: Agent Startup Test
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install agent dependencies
+        run: cd agent && npm ci
+
+      - name: Validate agent syntax
+        run: node --check agent/index.js
+
+      - name: Verify systeminformation loads
+        run: node -e "const si = require('./agent/node_modules/systeminformation'); si.osInfo().then(i => { console.log('OS:', i.distro); process.exit(0); })"
+
+  # ── Release (only on main push) ────────────────────────────────────
+  release:
+    name: Create Release Artifact
+    runs-on: ubuntu-latest
+    needs: [build-frontend, test-server, test-agent]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install production dependencies
+        run: npm ci --omit=dev
+
+      - name: Install agent production dependencies
+        run: cd agent && npm ci --omit=dev
+
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+      - name: Package release
+        run: |
+          tar -czf watchx-release.tar.gz \
+            --exclude='node_modules/.cache' \
+            server/ \
+            agent/ \
+            frontend/dist/ \
+            node_modules/ \
+            agent/node_modules/ \
+            package.json \
+            .env.example \
+            README.md
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchx-release
+          path: watchx-release.tar.gz
+          retention-days: 30
