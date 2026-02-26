@@ -1,4 +1,5 @@
 # WatchX — Real-Time Server Monitoring Platform
+[![npm version](https://badge.fury.io/js/watchx.svg)](https://badge.fury.io/js/watchx) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![GitHub Stars](https://img.shields.io/github/stars/Aditya-Prakash14/WatchX?style=social)](https://github.com/Aditya-Prakash14/WatchX) [![Node.js Version](https://img.shields.io/badge/Node-18+-green.svg)](https://nodejs.org/) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Aditya-Prakash14/WatchX/pulls)
 
 A full-stack server monitoring platform that tracks system health metrics in real time and sends proactive alerts to prevent downtime.
 
@@ -151,3 +152,58 @@ NODE_ENV=production npm start
 ```
 
 The server serves the built React app from `frontend/dist/` and handles all API/WS connections on a single port.
+
+## Troubleshooting
+
+### Agent won't connect to server
+- Verify `WATCHX_SERVER` environment variable points to the correct server WebSocket URL
+- Check firewall rules allowing the port (default 3001)
+- Ensure the server is running and accessible from the agent machine
+- Check server logs: `tail -f data/watchx.log`
+
+### Dashboard shows no data
+- Confirm at least one agent is connected and running
+- Check browser console for WebSocket errors
+- Verify server is not blocked by corporate firewall
+- Try reloading the page or restarting the server
+
+### High memory usage
+- Reduce `METRIC_RETENTION_DAYS` to prune older data more aggressively
+- Check number of connected agents and active alert rules
+- Consider running the agent on a separate machine if monitoring itself
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Development Setup
+
+```bash
+git clone https://github.com/YOUR_USERNAME/WatchX.git
+cd WatchX
+npm run install:all
+npm run dev
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
+
+## License
+
+WatchX is licensed under the **MIT License** – see the [LICENSE](./LICENSE) file for details.
+
+## Support & Contact
+
+- **Issues & Bugs**: Please file an issue on [GitHub Issues](https://github.com/Aditya-Prakash14/WatchX/issues)
+- **Feature Requests**: Open a discussion or create an issue with the `enhancement` label
+- **Email**: [aditya@example.com](mailto:aditya@example.com)
+- **Live Demo**: [watch-x-rho.vercel.app](https://watch-x-rho.vercel.app/)
+
+---
+
+**Built with ❤️ by [Aditya Prakash](https://github.com/Aditya-Prakash14)**
